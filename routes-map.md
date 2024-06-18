@@ -1,4 +1,4 @@
-# Routes
+# Routes Map
 
 - Instead of...
 POST /resources/:id/update
