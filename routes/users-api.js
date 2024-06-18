@@ -4,6 +4,7 @@
  *   these routes are mounted onto /api/users
  * See: https://expressjs.com/en/guide/using-middleware.html#middleware.router
  */
+// NOT THIS PATTERN
 
 const express = require('express');
 const router  = express.Router();
