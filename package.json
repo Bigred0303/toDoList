@@ -1,12 +1,12 @@
 {
   "name": "node-skeleton",
   "version": "1.0.0",
-  "description": "",
+  "description": "LHL Node Skeleton =========",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "local": "./node_modules/.bin/nodemon -L --ignore public/",
+    "local": "nodemon -L --ignore public/",
     "db:reset": "node bin/resetdb.js"
   },
   "author": "Lighthouse Labs",
@@ -15,12 +15,27 @@
     "chalk": "^2.4.2",
     "dotenv": "^2.0.0",
     "ejs": "^2.6.2",
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "morgan": "^1.9.1",
-    "pg": "^8.5.0",
+    "pg": "^8.12.0",
     "sass": "^1.35.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.10"
-  }
+  },
+  "bin": {
+    "node-skeleton": "resetdb.js"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bigred0303/toDoList.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/Bigred0303/toDoList/issues"
+  },
+  "homepage": "https://github.com/Bigred0303/toDoList#readme"
 }
