@@ -7,6 +7,6 @@ CREATE TABLE books (
   page_count INT NOT NULL,
   purchase_link VARCHAR(255) NOT NULL,
   price INT NOT NULL,
-  language VARCHAR(255) NOT NULL DEFAULT "en",
+  language VARCHAR(255) NOT NULL DEFAULT 'en',
   user_id INT REFERENCES users(id) ON DELETE CASCADE
   );
