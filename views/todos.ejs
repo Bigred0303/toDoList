@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart To Do List</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/styles/custom.css" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <h1 class="navbar-brand">Smart To Do List</h1>
+        <div class="nav ml-auto">
+          <button class="btn btn-secondary">User</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="form-container">
+      <!-- Form submission posts properly, use req.body to call the API's with -->
+      <form action="/todos" method="POST" class="form-inline">
+        <div class="input-group">
+          <input type="text" id="title" name="title" class="form-control" placeholder="Enter tasks to do here..." required>
+          <div class="input-group-append">
+            <button class="btn btn-primary" type="submit">Add Task</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="container">
+      <!-- A loop for each category so I don't need to write this 4 times -->
+      <% for (let category in todos.categories) { %>
+        <div class="box-wrapper">
+          <div class="box">
+            <!-- Changes casing to match table names -->
+            <h3><%= category.charAt(0).toUpperCase() + category.slice(1) %></h3>
+            <ul class="list-group">
+              <!-- Checks to see if table exists and has entries -->
+              <% if (todos.categories[category] && todos.categories[category].length > 0) { %>
+                <!-- Loop to list every table item and the related button -->
+                <% todos.categories[category].forEach(todo => { %>
+                  <li class="list-group-item">
+                    <span>- <%= todo.name %></span>
+                    <div class="actions">
+                      <!-- Edit button reroutes to /edit route, category is automatic -->
+                      <form action="/todos/<%= category %>/<%= todo.id %>/edit" method="GET">
+                        <button type="submit" class="badge-success">E</button>
+                       </form>
+                      <!-- Swap button might be funky, we may need another page to handle this. Or we could reuse edit page and have a dropdown menu for swaps -->
+                      <form action="/todos/<%= todo.id %>/<%= category %>" method="POST">
+                        <button type="submit" class="badge-warning">S</button>
+                       </form>
+                      <!-- Delete button reroutes to /delete route, category is automatic -->
+                       <form action="/todos/<%= category %>/<%= todo.id %>/delete" method="POST">
+                        <button type="submit" class="badge-danger">D</button>
+                       </form>
+                    </div>
+                  </li>
+                <% }); %>
+              <% } %>
+            </ul>
+          </div>
+        </div>
+      <% } %>
+    </section>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
