@@ -9,40 +9,57 @@
 const express = require('express');
 const router = express.Router();
 
-let todos = [];
+let todos = {
+  categories: {
+    movies: ["Mad Max"],
+    books: ["LOTR"],
+    food: ["Pizza Hut"],
+    products: ["Golf Club"]
+  }
+
+};
 
 // Main page, list of all items in 4 boxes
-router.get('/todos', (req, res) => {
-    res.send(todos);
+router.get('/', (req, res) => {
+  console.log('GET /todos');
+  res.render('todos', { todos });
 });
 
 // Form on main page that allows users to enter items in toDoList
-router.post('/todos', (req, res) => {
+router.post('/', (req, res) => {
+  const { title, category } = req.body;
+  console.log('POST /todos', { title, category });
 
+  if (todos.categories[category]) {
+    todos.categories[category].push(title);
+  } else {
+    console.log(`Category ${category} not found`);
+  }
+  res.redirect('/todos');
 });
 
 // Show metadata of item on another page
-router.get('/todos/:id', (req, res) => {
+router.get('/:id', (req, res) => {
 
 });
 
 // Brings up the edit page for an item
-router.get('/todos/:id/edit', (req, res) => {
+router.get('/:id/edit', (req, res) => {
 
 });
 
 // Edit the data of an item as the user wishes
-router.post('/todos/:id', (req, res) => {
+router.post('/:id', (req, res) => {
 
 });
 
 // Remove item from list
-router.post('/todos/:id/delete', (req, res) => {
+router.post('/:id/delete', (req, res) => {
 
 });
 
 // Removes an item from one list, API call for metadata for new list, error message if API cannot find, Adds it to the list selected by the user
-router.post('/todos/:id/:category', (req, res) => {
+router.post('/:id/:category', (req, res) => {
 
 });
 
