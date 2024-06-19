@@ -13,8 +13,6 @@
       <div class="container-fluid">
         <h1 class="navbar-brand">Smart To Do List</h1>
         <div class="nav ml-auto">
-          <a class="nav-link" href="/">Home</a>
-          <a class="nav-link" href="/post">Add New</a>
           <button class="btn btn-secondary">User</button>
         </div>
       </div>
@@ -23,15 +21,10 @@
 
   <main class="main">
     <section class="form-container">
+      <!-- Form submission posts properly, use req.body to call the API's with -->
       <form action="/todos" method="POST" class="form-inline">
         <div class="input-group">
           <input type="text" id="title" name="title" class="form-control" placeholder="Enter tasks to do here..." required>
-          <select name="category" class="form-control">
-            <option value="movies">Movies</option>
-            <option value="books">Books</option>
-            <option value="food">Food</option>
-            <option value="products">Products</option>
-          </select>
           <div class="input-group-append">
             <button class="btn btn-primary" type="submit">Add Task</button>
           </div>
@@ -40,19 +33,32 @@
     </section>
 
     <section class="container">
+      <!-- A loop for each category so I don't need to write this 4 times -->
       <% for (let category in todos.categories) { %>
         <div class="box-wrapper">
           <div class="box">
+            <!-- Changes casing to match table names -->
             <h3><%= category.charAt(0).toUpperCase() + category.slice(1) %></h3>
             <ul class="list-group">
+              <!-- Checks to see if table exists and has entries -->
               <% if (todos.categories[category] && todos.categories[category].length > 0) { %>
-                <% todos.categories[category].forEach((todo, index) => { %>
+                <!-- Loop to list every table item and the related button -->
+                <% todos.categories[category].forEach(todo => { %>
                   <li class="list-group-item">
-                    <span>- <%= todo %></span>
+                    <span>- <%= todo.name %></span>
                     <div class="actions">
-                      <a href="/todos/<%= category %>/<%= index %>/edit" class="badge badge-success">E</a>
-                      <a href="/todos/<%= category %>/<%= index %>" class="badge badge-warning">S</a>
-                      <a href="/todos/<%= category %>/<%= index %>/delete" class="badge badge-danger">D</a>
+                      <!-- Edit button reroutes to /edit route, category is automatic -->
+                      <form action="/todos/<%= category %>/<%= todo.id %>/edit" method="GET">
+                        <button type="submit" class="badge-success">E</button>
+                       </form>
+                      <!-- Swap button might be funky, we may need another page to handle this. Or we could reuse edit page and have a dropdown menu for swaps -->
+                      <form action="/todos/<%= todo.id %>/<%= category %>" method="POST">
+                        <button type="submit" class="badge-warning">S</button>
+                       </form>
+                      <!-- Delete button reroutes to /delete route, category is automatic -->
+                       <form action="/todos/<%= category %>/<%= todo.id %>/delete" method="POST">
+                        <button type="submit" class="badge-danger">D</button>
+                       </form>
                     </div>
                   </li>
                 <% }); %>
