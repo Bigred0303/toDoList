@@ -19,7 +19,7 @@ const pool = new Pool({
 });
 
 // Structure to access database entries, category is required to make going from DB to backend much much easier
-// This has changed some of our routes but I felt like it was worth changing the plan slightly and 
+// This has changed some of our routes but I felt like it was worth changing the plan slightly and
 // Should not have major side effects other than changing what you type your redirects to
 let todos = {
   categories: {
@@ -95,7 +95,37 @@ router.get('/:category/:id', async (req, res) => {
 // Category allows us to have the same id numbers in different tables
 // Brings up the edit page for an item
 router.get('/:category/:id/edit', async (req, res) => {
+  const category = req.params.category;
+  const id = req.params.id;
+  const templateVars = { category, id };
 
+  res.render('edit', templateVars);
+});
+
+// Update task
+router.post('/:category/:id/edit', async (req, res) => {
+  const category = req.params.category;
+  const id = req.params.id;
+  const newTask = req.body.editTask;
+
+  if (todos.categories[category]) {
+    const client = await pool.connect();
+    try {
+      const queryString = `UPDATE ${category} SET name = $1 WHERE id = $2`;
+      const values = [newTask, id];
+
+      await client.query(queryString, values);
+
+      res.redirect('/todos');
+    } catch (err) {
+      console.error(`Error updating task: ${err.message}`);
+    } finally {
+      client.release();
+    }
+  } else {
+    console.log(`Category ${category} not found`);
+  }
+  res.redirect('/todos');
 });
 
 // Category allows us to have the same id numbers in different tables
