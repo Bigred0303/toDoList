@@ -339,7 +339,9 @@ router.post("/:category/:id/edit", async (req, res) => {
       await client.query(queryString, values);
       console.log(`category: ${category}`);
     } catch (err) {
-      console.error(`Error updating restaurant in the database: ${err.message}`);
+      console.error(
+        `Error updating restaurant in the database: ${err.message}`
+      );
     } finally {
       client.release();
     }
@@ -377,7 +379,27 @@ router.post("/:category/:id", async (req, res) => {});
 
 // Category allows us to have the same id numbers in different tables
 // Remove item from list
-router.post("/:category/:id/delete", async (req, res) => {});
+router.post("/:category/:id/delete", async (req, res) => {
+  const client = await pool.connect();
+  const allowedCategories = ['movies', 'books', 'restaurants', 'products'];
+  const category = req.params.category;
+  const id = req.params.id;
+
+  if (!allowedCategories.includes(category)) {
+    return res.status(400).send(`Invalid category: ${category}`);
+  }
+  
+  const queryString = `DELETE FROM ${category} WHERE id = $1`;
+  try {
+    await client.query(queryString, [id]);
+    console.log(`category: ${category}`);
+  } catch (err) {
+    console.error(`Error deleting item from ${category}: ${err.message}`);
+  } finally {
+    client.release();
+  }
+  res.redirect("/todos");
+});
 
 // Removes an item from one list, API call for metadata for new list, error message if API cannot find, Adds it to the list selected by the user
 router.post("/:id/:category", async (req, res) => {});
