@@ -1,12 +1,12 @@
 DROP TABLE IF EXISTS movies CASCADE;
 CREATE TABLE movies (
   id SERIAL PRIMARY KEY NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  movie_title VARCHAR(255) NOT NULL,
-  release_date VARCHAR(255) NOT NULL,
-  rating VARCHAR(255) NOT NULL DEFAULT '0',
-  genre VARCHAR(255) NOT NULL,
-  imdb_score REAL NOT NULL DEFAULT '0',
+  name VARCHAR(255),
+  movie_title VARCHAR(255),
+  release_date VARCHAR(255),
+  rating VARCHAR(255) DEFAULT '0',
+  genre VARCHAR(255),
+  imdb_score REAL DEFAULT '0',
   user_id INT REFERENCES users(id) ON DELETE CASCADE
 );
 
