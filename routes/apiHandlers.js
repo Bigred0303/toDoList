@@ -1,11 +1,37 @@
 const fetch = require('node-fetch');
 
 const API_KEYS = {
-  google: 'AIzaSyC0mekQ2d7JOkB7o1Y_Ht69zFr__pEnd1U',
-  amazon: '6e89f192f4mshcc8a7dd8ca67541p193534jsn57333207678f',
   omdb: 'c7c7e658',
-  yelp: 'XXAFV0sW4Ub5fjwcU_G5A010QDax21TMn9Z5Ub5GJjowb-FsXgFCYKvuCJOzQczhaQNqGvzoxT_z5lVvDr3vpLoLDgeWRM3spiv2klf3xCleDtTfm2Sru2sxvHBrZnYx'
+  google: 'AIzaSyC0mekQ2d7JOkB7o1Y_Ht69zFr__pEnd1U',
+  yelp: 'XXAFV0sW4Ub5fjwcU_G5A010QDax21TMn9Z5Ub5GJjowb-FsXgFCYKvuCJOzQczhaQNqGvzoxT_z5lVvDr3vpLoLDgeWRM3spiv2klf3xCleDtTfm2Sru2sxvHBrZnYx',
+  amazon: '6e89f192f4mshcc8a7dd8ca67541p193534jsn57333207678f'
 };
+
+// Function to fetch movies from OMDb API
+async function fetchOMDbMovies(taskName) {
+  const url = `http://www.omdbapi.com/?apikey=${API_KEYS.omdb}&t=${encodeURIComponent(taskName)}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // Process and return relevant data
+    if (data.Response === 'True') {
+      return [{
+        name: data.Title,
+        release_date: data.Released,
+        rating: data.Rated,
+        genre: data.Genre,
+        imdb_score: parseFloat(data.imdbRating) || 0
+      }];
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error(`Error fetching OMDb movies: ${error.message}`);
+    return [];
+  }
+}
 
 // Function to fetch books from Google Books API
 async function fetchGoogleBooks(taskName) {
@@ -31,6 +57,38 @@ async function fetchGoogleBooks(taskName) {
     }
   } catch (error) {
     console.error(`Error fetching Google Books: ${error.message}`);
+    return [];
+  }
+}
+
+// Function to fetch foods from Yelp API
+async function fetchYelpFoods(taskName) {
+  const url = `https://api.yelp.com/v3/businesses/search?term=${encodeURIComponent(taskName)}&location=Saskatoon`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${API_KEYS.yelp}`
+      }
+    });
+    const data = await response.json();
+
+    // Process and return relevant data
+    if (data.businesses) {
+      return data.businesses.map(business => ({
+        name: business.name,
+        review_count: business.review_count || 0,
+        rating: business.rating || 0,
+        phone_number: business.phone || '',
+        website_url: business.url || '',
+        address: business.location.display_address.join(', '),
+        category: business.categories.map(cat => cat.title).join(', ')
+      }));
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error(`Error fetching Yelp foods: ${error.message}`);
     return [];
   }
 }
@@ -68,62 +126,4 @@ async function fetchAmazonProducts(taskName) {
   }
 }
 
-// Function to fetch movies from OMDb API
-async function fetchOMDbMovies(taskName) {
-  const url = `http://www.omdbapi.com/?apikey=${API_KEYS.omdb}&t=${encodeURIComponent(taskName)}`;
-
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-
-    // Process and return relevant data
-    if (data.Response === 'True') {
-      return [{
-        name: data.Title,
-        release_date: data.Released,
-        rating: data.Rated,
-        genre: data.Genre,
-        imdb_score: parseFloat(data.imdbRating) || 0
-      }];
-    } else {
-      return [];
-    }
-  } catch (error) {
-    console.error(`Error fetching OMDb movies: ${error.message}`);
-    return [];
-  }
-}
-
-// Function to fetch foods from Yelp API
-async function fetchYelpFoods(taskName) {
-  const url = `https://api.yelp.com/v3/businesses/search?term=${encodeURIComponent(taskName)}&location=Saskatoon`;
-
-  try {
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${API_KEYS.yelp}`
-      }
-    });
-    const data = await response.json();
-
-    // Process and return relevant data
-    if (data.businesses) {
-      return data.businesses.map(business => ({
-        name: business.name,
-        review_count: business.review_count || 0,
-        rating: business.rating || 0,
-        phone_number: business.phone || '',
-        website_url: business.url || '',
-        address: business.location.display_address.join(', '),
-        category: business.categories.map(cat => cat.title).join(', ')
-      }));
-    } else {
-      return [];
-    }
-  } catch (error) {
-    console.error(`Error fetching Yelp foods: ${error.message}`);
-    return [];
-  }
-}
-
-module.exports = { fetchGoogleBooks, fetchAmazonProducts, fetchOMDbMovies, fetchYelpFoods };
+module.exports = { fetchOMDbMovies, fetchGoogleBooks, fetchYelpFoods, fetchAmazonProducts };
