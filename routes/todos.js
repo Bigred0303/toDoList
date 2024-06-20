@@ -68,28 +68,155 @@ router.get("/", async (req, res) => {
 // POST /todos route
 //////////////////////////////
 // Form on main page that allows users to enter items in toDoList
-router.post('/', async (req, res) => {
-  // This is where you're going to need to get the info from the API, I have added name to every entry in the database so we can track the name.
-  // It can be set by whatever the api returns and then they should be able to change it with edit
-  const obj = { name: "TEST", release_date: "29 OCT 2019", rating: 7, genre: "testy", imdb_score: 8, user_id: 3 };
-  const category = "movies";
+router.post("/", async (req, res) => {
+  const taskName = req.body.title;
 
-  // Sorry for doing some of your part, I needed to so I could make sure that my section was working properly.
-  // I have left all of the API backend unfinished, if you no longer want this task and would like one of mine I will swap no problem
-  // All of this works so you jsut need to feed in the info from the API
-  if (todos.categories[category]) {
+  console.log(`New task added: ${taskName}`);
+
+  let omdbMovies = [];
+  let googleBooks = [];
+  let yelpFoods = [];
+  let amazonProducts = [];
+
+  try {
+    // Fetch data from APIs
+    [omdbMovies, googleBooks, yelpFoods, amazonProducts] = await Promise.all([
+      fetchOMDbMovies(taskName).catch((err) =>
+        console.error("Error fetching OMDb Movies:", err.message)
+      ),
+      fetchGoogleBooks(taskName).catch((err) =>
+        console.error("Error fetching Google Books:", err.message)
+      ),
+      fetchYelpFoods(taskName).catch((err) =>
+        console.error("Error fetching Yelp Foods:", err.message)
+      ),
+      fetchAmazonProducts(taskName).catch((err) =>
+        console.error("Error fetching Amazon Products:", err.message)
+      ),
+    ]);
+  } catch (err) {
+    console.error(`Error fetching data from APIs: ${err.message}`);
+    return res.status(500).send("Error fetching data from APIs");
+  }
+
+  // Logging fetched data for debugging
+  console.log("OMDb Movies:", omdbMovies);
+  console.log("Google Books:", googleBooks);
+  console.log("Yelp Foods:", yelpFoods);
+  console.log("Amazon Products:", amazonProducts);
+
+  if (omdbMovies.length > 0) {
     const client = await pool.connect();
+    const category = "movies";
     try {
-      await client.query(`INSERT INTO ${category} (name, release_date, rating, genre, imdb_score, user_id) VALUES ($1, $2, $3, $4, $5, $6)`,
-        Object.values(obj));
-      await fetchTodos(); // Update the todos object after adding a new todo
+      const queryString = `INSERT INTO ${category} (name, movie_title, release_date, rating, genre, imdb_score) VALUES ($1, $2, $3, $4, $5, $6)`;
+      const values = [
+        taskName,
+        omdbMovies[0].name,
+        omdbMovies[0].release_date,
+        omdbMovies[0].rating,
+        omdbMovies[0].genre,
+        omdbMovies[0].imdb_score,
+      ];
+
+      await client.query(queryString, values);
+      console.log(`category: ${category}`);
+    } catch (err) {
+      console.error(`Error adding movie to database: ${err.message}`);
     } finally {
       client.release();
     }
   } else {
-    console.log(`Category ${category} not found`);
+    console.log(`Movies category not found`);
   }
-  res.redirect('/todos');
+
+  if (googleBooks.length > 0) {
+    const client = await pool.connect();
+    const category = "books";
+    try {
+      const queryString = `INSERT INTO ${category} (name, title, author, publish_date, page_count, purchase_link, price, language) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
+      const values = [
+        taskName,
+        googleBooks[0].title,
+        googleBooks[0].author,
+        googleBooks[0].publish_date,
+        googleBooks[0].page_count,
+        googleBooks[0].purchase_link,
+        Math.round(googleBooks[0].price),
+        googleBooks[0].language,
+      ];
+
+      await client.query(queryString, values);
+    } catch (err) {
+      console.error(`Error adding book to database: ${err.message}`);
+    } finally {
+      client.release();
+    }
+  } else {
+    console.log(`Books category not found`);
+  }
+
+  if (yelpFoods.length > 0) {
+    const client = await pool.connect();
+    const category = "restaurants";
+    try {
+      const queryString = `INSERT INTO ${category} (name, restaurant_name, review_count, rating, phone_number, website_url, address, category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
+      const values = [
+        taskName,
+        yelpFoods[0].name,
+        yelpFoods[0].review_count,
+        yelpFoods[0].rating,
+        yelpFoods[0].phone_number,
+        yelpFoods[0].website_url,
+        yelpFoods[0].address,
+        yelpFoods[0].category,
+      ];
+
+      await client.query(queryString, values);
+    } catch (err) {
+      console.error(`Error adding restaurant to database: ${err.message}`);
+    } finally {
+      client.release();
+    }
+  } else {
+    console.log(`Restaurants category not found`);
+  }
+
+  if (amazonProducts.length > 0) {
+    const client = await pool.connect();
+    const category = "products";
+    try {
+      const queryString = `INSERT INTO ${category} (name, product_name, number_of_products, lowest_price, highest_price, avg_star_rating, is_prime) VALUES ($1, $2, $3, $4, $5, $6, $7)`;
+      const values = [
+        taskName,
+        amazonProducts[0].product_title,
+        amazonProducts[0].product_num_offers,
+        Math.round(amazonProducts[0].product_price),
+        Math.round(amazonProducts[0].product_price),
+        amazonProducts[0].product_star_rating,
+        amazonProducts[0].is_prime,
+      ];
+
+      await client.query(queryString, values);
+    } catch (err) {
+      console.error(`Error adding product to database: ${err.message}`);
+    } finally {
+      client.release();
+    }
+  } else {
+    console.log(`Products category not found`);
+  }
+  res.redirect("/todos");
+});
+
+// GET route to render edit form
+router.get("/:category/:id/edit", (req, res) => {
+  const category = req.params.category;
+  const id = req.params.id;
+
+  // Fetch task details based on category and taskId
+  // Render edit form (e.g., edit-task.ejs) with pre-filled task details
+  res.render("edit", { category, id });
 });
 
 // GET route to render edit form
