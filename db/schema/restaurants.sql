@@ -4,7 +4,7 @@ CREATE TABLE restaurants (
   name VARCHAR(255) NOT NULL,
   restaurant_name VARCHAR(255) NOT NULL,
   review_count INT NOT NULL,
-  rating REAL NOT NULL DEFAULT 0,
+  rating VARCHAR(255) NOT NULL DEFAULT 0,
   phone_number BIGINT NOT NULL,
   website_url VARCHAR(255) NOT NULL DEFAULT ' ',
   address VARCHAR(255) NOT NULL,
