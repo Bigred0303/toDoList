@@ -28,33 +28,43 @@ let todos = {
 
 };
 
-
-// Checks the database using pq to fetch table info which is then fed into the home page
-// Uses promises so you're likely to get unhandled promise rejection errors when messing around with it
-// You shouldn't have to use this at all however, since you don't need to fetch the database just change parts of it
 const fetchTodos = async () => {
-  const client = await pool.connect();
-  try {
-    const categories = ['movies', 'books', 'foods', 'products'];
-    const categoryPromises = categories.map(async (category) => {
-      const res = await client.query(`SELECT id, name FROM ${category}`);
-      return {
-        [category]: res.rows
-      };
-    });
-    const categoryData = await Promise.all(categoryPromises);
-    todos.categories = categoryData.reduce((acc, category) => {
-      return { ...acc, ...category };
-    }, {});
-  } catch (err) {
-    console.error(`Error fetching todos: ${err.message}`);
-  } finally {
-    client.release();
-  }
-};
-
-fetchTodos();
-
+    // Establishes a connection to the database using the pool object
+    const client = await pool.connect();
+  
+    try {
+      // Defines an array of category names to fetch data for
+      const categories = ['movies', 'books', 'foods', 'products'];
+  
+      // Maps over the categories array, creating an array of promises for fetching data from each category table
+      const categoryPromises = categories.map(async (category) => {
+        // Executes a query to select the id and name from the current category table
+        const res = await client.query(`SELECT id, name FROM ${category}`);
+        // Returns an object with the category name as the key and the query result rows as the value
+        return {
+          [category]: res.rows
+        };
+      });
+  
+      // Waits for all category promises to resolve, resulting in an array of category data objects
+      const categoryData = await Promise.all(categoryPromises);
+  
+      // Reduces the array of category data objects into a single object, merging each category's data
+      todos.categories = categoryData.reduce((acc, category) => {
+        return { ...acc, ...category };
+      }, {});
+    } catch (err) {
+      // Logs an error message if there is an issue fetching the data
+      console.error(`Error fetching todos: ${err.message}`);
+    } finally {
+      // Releases the database client back to the pool
+      client.release();
+    }
+  };
+  
+  // Calls the fetchTodos function to execute the data fetching process
+  fetchTodos();
+  
 // Main page, list of all items in 4 boxes
 router.get('/', async (req, res) => {
   await fetchTodos();
