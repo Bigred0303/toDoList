@@ -1,4 +1,4 @@
-INSERT INTO foods (name, review_count, rating, phone_number, website_url, address, category, user_id) VALUES
+INSERT INTO restaurants (name, review_count, rating, phone_number, website_url, address, category, user_id) VALUES
 ('food1', 150, 4, 1234567890, 'https://example.com/food1', '123 Main St, Anytown, USA', 'Italian', 1),
 ('Chunqing Chicken', 200, 5, 2345678901, 'https://example.com/food2', '456 Elm St, Othertown, USA', 'Chinese', 2),
 ('Taco Place', 100, 3, 3456789012, 'https://example.com/food3', '789 Oak St, Anycity, USA', 'Mexican', 3),
