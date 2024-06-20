@@ -4,7 +4,7 @@ CREATE TABLE books (
   name VARCHAR(255) NOT NULL,
   title VARCHAR(255) NOT NULL,
   author VARCHAR(255) NOT NULL,
-  publish_date DATE NOT NULL,
+  publish_date VARCHAR(255) NOT NULL,
   page_count INT NOT NULL,
   purchase_link VARCHAR(255) NOT NULL,
   price INT NOT NULL,
