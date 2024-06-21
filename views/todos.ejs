@@ -21,7 +21,6 @@
 
   <main class="main">
     <section class="form-container">
-      <!-- Form submission posts properly, use req.body to call the API's with -->
       <form action="/todos" method="POST" class="form-inline">
         <div class="input-group">
           <input type="text" id="title" name="title" class="form-control" placeholder="Enter tasks to do here..." required>
@@ -33,32 +32,23 @@
     </section>
 
     <section class="container">
-      <!-- A loop for each category so I don't need to write this 4 times -->
       <% for (let category in todos.categories) { %>
         <div class="box-wrapper">
           <div class="box">
-            <!-- Changes casing to match table names -->
             <h3><%= category.charAt(0).toUpperCase() + category.slice(1) %></h3>
             <ul class="list-group">
-              <!-- Checks to see if table exists and has entries -->
               <% if (todos.categories[category] && todos.categories[category].length > 0) { %>
-                <!-- Loop to list every table item and the related button -->
                 <% todos.categories[category].forEach(todo => { %>
                   <li class="list-group-item">
-                    <span>- <%= todo.name %></span>
+                    <a href="/todos/<%= category %>/<%= todo.id %>"><span>- <%= todo.name %></span></a>
                     <div class="actions">
-                      <!-- Edit button reroutes to /edit route, category is automatic -->
                       <form action="/todos/<%= category %>/<%= todo.id %>/edit" method="GET">
-                        <button type="submit" class="badge-success">E</button>
-                       </form>
-                      <!-- Swap button might be funky, we may need another page to handle this. Or we could reuse edit page and have a dropdown menu for swaps -->
-                      <form action="/todos/<%= todo.id %>/<%= category %>" method="POST">
-                        <button type="submit" class="badge-warning">S</button>
-                       </form>
-                      <!-- Delete button reroutes to /delete route, category is automatic -->
-                       <form action="/todos/<%= category %>/<%= todo.id %>/delete" method="POST">
-                        <button type="submit" class="badge-danger">D</button>
-                       </form>
+                        <button type="submit" class="badge badge-success">E</button>
+                      </form>
+                      <button class="badge badge-warning" onclick="showCategoryModal('<%= category %>', <%= todo.id %>)">S</button>
+                      <form action="/todos/<%= category %>/<%= todo.id %>/delete" method="POST">
+                        <button type="submit" class="badge badge-danger">D</button>
+                      </form>
                     </div>
                   </li>
                 <% }); %>
@@ -70,8 +60,91 @@
     </section>
   </main>
 
+  <!-- Modal -->
+  <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="categoryForm" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="categoryModalLabel">Select New Category</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">X</button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="id" id="taskId">
+            <input type="hidden" name="oldCategory" id="oldCategory">
+            <div class="form-group">
+              <label for="newCategory">New Category:</label>
+              <select class="form-control" id="newCategory" name="newCategory" required>
+                <!-- Options will be populated dynamically using JavaScript -->
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    function showCategoryModal(oldCategory, id) {
+      document.getElementById('taskId').value = id;
+      document.getElementById('oldCategory').value = oldCategory;
+      const categorySelect = document.getElementById('newCategory');
+      categorySelect.innerHTML = ''; // Clear existing options
+
+      const categories = ['movies', 'books', 'restaurants', 'products'];
+      categories.forEach(cat => {
+        if (cat !== oldCategory) {
+          const option = document.createElement('option');
+          option.value = cat;
+          option.text = cat.charAt(0).toUpperCase() + cat.slice(1);
+          categorySelect.appendChild(option);
+        }
+      });
+
+      $('#categoryModal').modal('show');
+    }
+
+    document.getElementById('categoryForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const id = document.getElementById('taskId').value;
+      const newCategory = document.getElementById('newCategory').value;
+      const oldCategory = document.getElementById('oldCategory').value;
+
+      fetch(`/todos/${id}/change-category`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          oldCategory: oldCategory,
+          newCategory: newCategory
+        })
+      }).then(response => {
+        if (response.ok) {
+          $('#categoryModal').modal('hide');
+          location.reload();
+        } else {
+          alert('Failed to change category');
+        }
+      }).catch(error => {
+        console.error('Error:', error);
+      });
+    });
+
+    // Ensure the close button closes the modal
+    document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+      button.addEventListener('click', function () {
+        $('#categoryModal').modal('hide');
+      });
+    });
+  </script>
 </body>
 </html>
+
