@@ -64,7 +64,7 @@ body {
   justify-content: space-between;
   flex-wrap: wrap;
   width: 100%;
-  height: calc(100vh - 200px); /* Adjust the height to stretch down the screen */
+  height: calc(100vh - 200px); 
 }
 
 .box-wrapper {
@@ -108,14 +108,15 @@ body {
 .list-group-item .actions {
   display: flex;
   gap: 5px;
+  align-items: center; /* Center buttons vertically */
 }
 
 .list-group-item .actions .badge {
   width: 20px;
   height: 20px;
-  display: inline-block;
-  line-height: 20px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
   color: #fff;
 }

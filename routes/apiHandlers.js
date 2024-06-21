@@ -4,7 +4,7 @@ const API_KEYS = {
   omdb: 'c7c7e658',
   google: 'AIzaSyC0mekQ2d7JOkB7o1Y_Ht69zFr__pEnd1U',
   yelp: 'XXAFV0sW4Ub5fjwcU_G5A010QDax21TMn9Z5Ub5GJjowb-FsXgFCYKvuCJOzQczhaQNqGvzoxT_z5lVvDr3vpLoLDgeWRM3spiv2klf3xCleDtTfm2Sru2sxvHBrZnYx',
-  amazon: '6e89f192f4mshcc8a7dd8ca67541p193534jsn57333207678f'
+  amazon: '6a4885ad7fmsh6a483f7213abd9ap1c351bjsna8e09a3851e7'
 };
 
 // Function to fetch movies from OMDb API
@@ -12,10 +12,11 @@ async function fetchOMDbMovies(taskName) {
   const url = `http://www.omdbapi.com/?apikey=${API_KEYS.omdb}&t=${encodeURIComponent(taskName)}`;
 
   try {
+    // Fetch data from OMDb API
     const response = await fetch(url);
     const data = await response.json();
-
-    // Process and return relevant data
+    console.log(data)
+    // Process and return relevant data if response is successful
     if (data.Response === 'True') {
       return [{
         name: data.Title,
@@ -38,10 +39,11 @@ async function fetchGoogleBooks(taskName) {
   const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(taskName)}&key=${API_KEYS.google}`;
 
   try {
+    // Fetch data from Google Books API
     const response = await fetch(url);
     const data = await response.json();
 
-    // Process and return relevant data
+    // Process and return relevant data if response is successful
     if (data.items) {
       return data.items.map(item => ({
         title: item.volumeInfo.title,
@@ -66,6 +68,7 @@ async function fetchYelpFoods(taskName) {
   const url = `https://api.yelp.com/v3/businesses/search?term=${encodeURIComponent(taskName)}&location=Saskatoon`;
 
   try {
+    // Fetch data from Yelp API
     const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${API_KEYS.yelp}`
@@ -73,7 +76,7 @@ async function fetchYelpFoods(taskName) {
     });
     const data = await response.json();
 
-    // Process and return relevant data
+    // Process and return relevant data if response is successful
     if (data.businesses) {
       return data.businesses.map(business => ({
         name: business.name,
@@ -98,26 +101,33 @@ async function fetchAmazonProducts(taskName) {
   const url = `https://real-time-amazon-data.p.rapidapi.com/search?query=${encodeURIComponent(taskName)}&page=1&country=US&sort_by=RELEVANCE&product_condition=ALL`;
 
   try {
+    // Fetch data from Amazon API
     const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'x-rapidapi-key': API_KEYS.amazon,
         'x-rapidapi-host': 'real-time-amazon-data.p.rapidapi.com'
       }
     });
-    const data = await response.json();
 
-    // Process and return relevant data
-    if (data && data.products) {
-      return data.products.map(product => ({
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    // Process and return relevant data if response is successful
+    if (data && data.data && data.data.products && data.data.products.length > 0) {
+      return data.data.products.map(product => ({
         name: product.product_title,
         product_name: product.product_title,
         number_of_products: product.product_num_offers || 0,
-        lowest_price: product.product_minimum_offer_price || 0,
+        lowest_price: product.product_minimum_offer_price ? parseFloat(product.product_minimum_offer_price.replace('$', '')) : 0,
         highest_price: product.product_price ? parseFloat(product.product_price.replace('$', '')) : 0,
         avg_star_rating: product.product_star_rating ? parseFloat(product.product_star_rating) : 0,
         is_prime: product.is_prime || false
       }));
     } else {
+      console.warn('No products found in the response data.');
       return [];
     }
   } catch (error) {
