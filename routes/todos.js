@@ -226,13 +226,27 @@ router.post("/", async (req, res) => {
 });
 
 // GET route to render edit form
-router.get("/:category/:id/edit", (req, res) => {
+router.get("/:category/:id/edit", async (req, res) => {
   const category = req.params.category;
   const id = req.params.id;
 
-  // Fetch task details based on category and taskId
-  // Render edit form (e.g., edit-task.ejs) with pre-filled task details
-  res.render("edit", { category, id });
+  try {
+    // Fetch the task details from the database
+    const result = await pool.query(`SELECT * FROM ${category} WHERE id = $1`, [id]);
+    const task = result.rows[0]; // Get the task from the query result
+
+    if (task) {
+      // Render the edit form with the task details and category
+      res.render("edit", { task, category, id });
+    } else {
+      // Send a 404 response if the task is not found
+      res.status(404).send("Task not found");
+    }
+  } catch (err) {
+    // Log and send a 500 response if there's an error
+    console.error(`Error fetching task for edit: ${err.message}`);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 // Update task

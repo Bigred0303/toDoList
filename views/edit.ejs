@@ -32,12 +32,13 @@
         method="POST"
       >
         <div class="form-group mb-2">
-          <label for="longURL">New Task Name:</label>
+          <label for="editTask">New Task Name:</label>
+          <!-- Value pre-populates the input field with the task name -->
           <input
             class="form-control"
             type="text"
             name="editTask"
-            placeholder="Type new name here"
+            value="<%= task.name %>"
             style="width: 300px; margin: 1em"
           />
           <button type="submit" class="btn btn-primary">Submit</button>
