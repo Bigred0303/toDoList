@@ -40,7 +40,7 @@ const fetchTodos = async () => {
   try {
     // Define the categories to fetch data from
     const categories = ["movies", "books", "restaurants", "products"];
-    
+
     // Create an array of promises to fetch data from each category
     const categoryPromises = categories.map(async (category) => {
       // Query the database for each category and return the results
@@ -49,10 +49,10 @@ const fetchTodos = async () => {
         [category]: res.rows, // Store the results in an object with the category name as the key
       };
     });
-    
+
     // Wait for all the category data to be fetched
     const categoryData = await Promise.all(categoryPromises);
-    
+
     // Combine the results into a single object
     todos.categories = categoryData.reduce((acc, category) => {
       return { ...acc, ...category }; // Merge each category's data into the accumulator object
@@ -132,7 +132,6 @@ router.post("/", async (req, res) => {
       ];
 
       await client.query(queryString, values);
-      console.log(`category: ${category}`); // Log the category
     } catch (err) {
       console.error(`Error adding movie to database: ${err.message}`);
     } finally {
@@ -242,9 +241,9 @@ router.post("/:category/:id/edit", async (req, res) => {
     const category = req.params.category;
     const id = req.params.id;
     const newTask = req.body.editTask;
-  
+
     console.log(`Task Name updated: ${newTask}`);
-  
+
     // Update table
     if (category === "movies") {
       try {
@@ -252,9 +251,8 @@ router.post("/:category/:id/edit", async (req, res) => {
                               SET name = $1
                               WHERE id = $2`;
         const values = [newTask, id];
-  
+
         await client.query(queryString, values);
-        console.log(`category: ${category}`);
       } catch (err) {
         console.error(`Error updating movie in the database: ${err.message}`);
       } finally {
@@ -266,9 +264,8 @@ router.post("/:category/:id/edit", async (req, res) => {
                               SET name = $1
                               WHERE id = $2`;
         const values = [newTask, id];
-  
+
         await client.query(queryString, values);
-        console.log(`category: ${category}`);
       } catch (err) {
         console.error(`Error updating book in the database: ${err.message}`);
       } finally {
@@ -280,9 +277,8 @@ router.post("/:category/:id/edit", async (req, res) => {
                               SET name = $1
                               WHERE id = $2`;
         const values = [newTask, id];
-  
+
         await client.query(queryString, values);
-        console.log(`category: ${category}`);
       } catch (err) {
         console.error(`Error updating restaurant in the database: ${err.message}`);
       } finally {
@@ -294,9 +290,8 @@ router.post("/:category/:id/edit", async (req, res) => {
                               SET name = $1
                               WHERE id = $2`;
         const values = [newTask, id];
-  
+
         await client.query(queryString, values);
-        console.log(`category: ${category}`);
       } catch (err) {
         console.error(`Error updating product in the database: ${err.message}`);
       } finally {
@@ -313,7 +308,7 @@ router.post("/:category/:id/edit", async (req, res) => {
 router.post("/:category/:id/delete", async (req, res) => {
   // Connect to the database using the pool
   const client = await pool.connect();
-  
+
   // Define the allowed categories for deletion
   const allowedCategories = ['movies', 'books', 'restaurants', 'products'];
   const category = req.params.category; // Get the category from the request parameters
@@ -323,13 +318,12 @@ router.post("/:category/:id/delete", async (req, res) => {
   if (!allowedCategories.includes(category)) {
     return res.status(400).send(`Invalid category: ${category}`); // Return a 400 status code if the category is invalid
   }
-  
+
   // Construct the SQL query string for deleting the item
   const queryString = `DELETE FROM ${category} WHERE id = $1`;
   try {
     // Execute the SQL query to delete the item
     await client.query(queryString, [id]);
-    console.log(`category: ${category}`); // Log the category for debugging
   } catch (err) {
     // Log any errors that occur during the deletion
     console.error(`Error deleting item from ${category}: ${err.message}`);
@@ -337,7 +331,7 @@ router.post("/:category/:id/delete", async (req, res) => {
     // Release the database client back to the pool
     client.release();
   }
-  
+
   // Redirect to the todos page after deletion
   res.redirect("/todos");
 });
