@@ -6,6 +6,16 @@
   <title>Smart To Do List</title>
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
   <link href="/styles/custom.css" rel="stylesheet">
+  <style>
+    .draggable {
+      cursor: move; /* Changes cursor to indicate draggable items */
+    }
+    .drop-zone {
+      /* border: 2px dashed #ccc; Styling for drop zones */
+      padding: 10px;
+      margin: 10px;
+    }
+  </style>
 </head>
 <body>
   <header class="header">
@@ -32,14 +42,14 @@
     </section>
 
     <section class="container">
-      <% for (let category in todos.categories) { %>
+      <% for (let category in todos.categories) { %> <!-- Loop through each category -->
         <div class="box-wrapper">
-          <div class="box">
-            <h3><%= category.charAt(0).toUpperCase() + category.slice(1) %></h3>
+          <div class="box drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)" data-category="<%= category %>">
+            <h3><%= category.charAt(0).toUpperCase() + category.slice(1) %></h3> <!-- Capitalize category name -->
             <ul class="list-group">
-              <% if (todos.categories[category] && todos.categories[category].length > 0) { %>
-                <% todos.categories[category].forEach(todo => { %>
-                  <li class="list-group-item">
+              <% if (todos.categories[category] && todos.categories[category].length > 0) { %> <!-- Check if category has items -->
+                <% todos.categories[category].forEach(todo => { %> <!-- Loop through each todo item in the category -->
+                  <li class="list-group-item draggable" draggable="true" ondragstart="drag(event)" data-id="<%= todo.id %>" data-category="<%= category %>">
                     <a href="/todos/<%= category %>/<%= todo.id %>"><span>- <%= todo.name %></span></a>
                     <div class="actions">
                       <form action="/todos/<%= category %>/<%= todo.id %>/edit" method="GET">
@@ -92,15 +102,17 @@
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script>
+    // Function to show the modal for swapping categories
     function showCategoryModal(oldCategory, id) {
-      document.getElementById('taskId').value = id;
-      document.getElementById('oldCategory').value = oldCategory;
+      document.getElementById('taskId').value = id; // Set the task ID in the modal
+      document.getElementById('oldCategory').value = oldCategory; // Set the old category in the modal
       const categorySelect = document.getElementById('newCategory');
       categorySelect.innerHTML = ''; // Clear existing options
 
+      // Populate the new category options
       const categories = ['movies', 'books', 'restaurants', 'products'];
       categories.forEach(cat => {
-        if (cat !== oldCategory) {
+        if (cat !== oldCategory) { // Exclude the current category
           const option = document.createElement('option');
           option.value = cat;
           option.text = cat.charAt(0).toUpperCase() + cat.slice(1);
@@ -108,15 +120,17 @@
         }
       });
 
-      $('#categoryModal').modal('show');
+      $('#categoryModal').modal('show'); // Show the modal
     }
 
+    // Handle form submission for category change
     document.getElementById('categoryForm').addEventListener('submit', function(event) {
-      event.preventDefault();
+      event.preventDefault(); // Prevent default form submission
       const id = document.getElementById('taskId').value;
       const newCategory = document.getElementById('newCategory').value;
       const oldCategory = document.getElementById('oldCategory').value;
 
+      // Send POST request to change category
       fetch(`/todos/${id}/change-category`, {
         method: 'POST',
         headers: {
@@ -128,13 +142,13 @@
         })
       }).then(response => {
         if (response.ok) {
-          $('#categoryModal').modal('hide');
-          location.reload();
+          $('#categoryModal').modal('hide'); // Hide the modal on success
+          location.reload(); // Reload the page to reflect changes
         } else {
-          alert('Failed to change category');
+          alert('Failed to change category'); // Show error message
         }
       }).catch(error => {
-        console.error('Error:', error);
+        console.error('Error:', error); // Log errors
       });
     });
 
@@ -144,6 +158,44 @@
         $('#categoryModal').modal('hide');
       });
     });
+
+    // Allow drop event handler
+    function allowDrop(event) {
+      event.preventDefault(); // Allow the item to be dropped
+    }
+
+    // Drag start event handler
+    function drag(event) {
+      event.dataTransfer.setData("text", JSON.stringify({
+        id: event.target.getAttribute("data-id"), // Set the task ID
+        oldCategory: event.target.getAttribute("data-category") // Set the old category
+      }));
+    }
+
+    // Drop event handler
+    async function drop(event) {
+      event.preventDefault();
+      const data = JSON.parse(event.dataTransfer.getData("text")); // Get the dragged item data
+      const newCategory = event.target.closest('.drop-zone').getAttribute("data-category"); // Get the new category
+
+      // Send POST request to change category
+      const response = await fetch(`/todos/${data.id}/change-category`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          oldCategory: data.oldCategory,
+          newCategory: newCategory
+        })
+      });
+
+      if (response.ok) {
+        location.reload(); // Reload the page on success
+      } else {
+        alert('Error moving item to new category'); // Show error message
+      }
+    }
   </script>
 </body>
 </html>
