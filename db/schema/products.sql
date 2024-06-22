@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS products CASCADE;
 CREATE TABLE products (
   id SERIAL PRIMARY KEY NOT NULL,
+  position INT,
   name VARCHAR(255),
   product_name VARCHAR(255),
   number_of_products INT,

@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS movies CASCADE;
 CREATE TABLE movies (
   id SERIAL PRIMARY KEY NOT NULL,
+  position INT,
   name VARCHAR(255),
   movie_title VARCHAR(255),
   release_date VARCHAR(255),

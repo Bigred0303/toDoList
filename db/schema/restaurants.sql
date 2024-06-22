@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS restaurants CASCADE;
 CREATE TABLE restaurants (
   id SERIAL PRIMARY KEY NOT NULL,
+  position INT,
   name VARCHAR(255),
   restaurant_name VARCHAR(255),
   review_count INT,
