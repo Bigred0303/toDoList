@@ -11,9 +11,11 @@
       cursor: move; /* Changes cursor to indicate draggable items */
     }
     .drop-zone {
-      /* border: 2px dashed #ccc; Styling for drop zones */
       padding: 10px;
       margin: 10px;
+    }
+    .drag-over {
+      background-color: #f0f0f0; /* Highlight drop target */
     }
   </style>
 </head>
@@ -44,12 +46,12 @@
     <section class="container">
       <% for (let category in todos.categories) { %> <!-- Loop through each category -->
         <div class="box-wrapper">
-          <div class="box drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)" data-category="<%= category %>">
+          <div class="box drop-zone" ondrop="drop(event, '<%= category %>')" ondragover="allowDrop(event)" data-category="<%= category %>">
             <h3><%= category.charAt(0).toUpperCase() + category.slice(1) %></h3> <!-- Capitalize category name -->
             <ul class="list-group">
               <% if (todos.categories[category] && todos.categories[category].length > 0) { %> <!-- Check if category has items -->
                 <% todos.categories[category].forEach(todo => { %> <!-- Loop through each todo item in the category -->
-                  <li class="list-group-item draggable" draggable="true" ondragstart="drag(event)" data-id="<%= todo.id %>" data-category="<%= category %>">
+                  <li class="list-group-item draggable" draggable="true" ondragstart="drag(event)" ondrop="dropOnItem(event)" ondragover="allowDrop(event)" data-id="<%= todo.id %>" data-category="<%= category %>">
                     <a href="/todos/<%= category %>/<%= todo.id %>"><span>- <%= todo.name %></span></a>
                     <div class="actions">
                       <form action="/todos/<%= category %>/<%= todo.id %>/edit" method="GET">
@@ -170,31 +172,96 @@
         id: event.target.getAttribute("data-id"), // Set the task ID
         oldCategory: event.target.getAttribute("data-category") // Set the old category
       }));
+      event.target.classList.add('dragging'); // Add class to dragged element
     }
 
-    // Drop event handler
-    async function drop(event) {
+    // Drop event handler for moving within same category
+    async function drop(event, category) {
       event.preventDefault();
       const data = JSON.parse(event.dataTransfer.getData("text")); // Get the dragged item data
-      const newCategory = event.target.closest('.drop-zone').getAttribute("data-category"); // Get the new category
 
-      // Send POST request to change category
-      const response = await fetch(`/todos/${data.id}/change-category`, {
+      if (data.oldCategory === category) {
+        const draggedItem = document.querySelector(`[data-id='${data.id}'][data-category='${category}']`);
+        const dropTarget = event.target.closest('.list-group-item');
+
+        if (dropTarget && dropTarget !== draggedItem) {
+          const listGroup = dropTarget.closest('.list-group');
+          const allItems = Array.from(listGroup.children);
+          const draggedIndex = allItems.indexOf(draggedItem);
+          const targetIndex = allItems.indexOf(dropTarget);
+
+          listGroup.insertBefore(draggedItem, (draggedIndex > targetIndex) ? dropTarget : dropTarget.nextSibling);
+          await updateItemPosition(category);
+        }
+      } else {
+        const newCategory = event.target.closest('.drop-zone').getAttribute("data-category"); // Get the new category
+
+        // Send POST request to change category
+        const response = await fetch(`/todos/${data.id}/change-category`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            oldCategory: data.oldCategory,
+            newCategory: newCategory
+          })
+        });
+
+        if (response.ok) {
+          location.reload(); // Reload the page on success
+        } else {
+          alert('Error moving item to new category'); // Show error message
+        }
+      }
+    }
+
+    // Drop event handler on item
+    function dropOnItem(event) {
+      event.preventDefault();
+      event.stopPropagation(); // Prevent event from bubbling up
+      const data = JSON.parse(event.dataTransfer.getData("text")); // Get the dragged item data
+      const dropTarget = event.target.closest('.list-group-item');
+
+      if (dropTarget) {
+        const category = dropTarget.getAttribute('data-category');
+        const draggedItem = document.querySelector(`[data-id='${data.id}'][data-category='${category}']`);
+        const listGroup = dropTarget.closest('.list-group');
+        const allItems = Array.from(listGroup.children);
+        const draggedIndex = allItems.indexOf(draggedItem);
+        const targetIndex = allItems.indexOf(dropTarget);
+
+        listGroup.insertBefore(draggedItem, (draggedIndex > targetIndex) ? dropTarget : dropTarget.nextSibling);
+        updateItemPosition(category);
+      }
+    }
+
+    // Drag over event handler for drop zones
+    function dragOver(event) {
+      event.preventDefault();
+      event.target.closest('.list-group-item').classList.add('drag-over'); // Add class to drop target
+    }
+
+    // Drag leave event handler for drop zones
+    function dragLeave(event) {
+      event.target.closest('.list-group-item').classList.remove('drag-over'); // Remove class from drop target
+    }
+
+    // Function to update item positions in the backend
+    async function updateItemPosition(category) {
+      const items = document.querySelectorAll(`.list-group-item[data-category='${category}']`);
+      const positions = Array.from(items).map((item, index) => ({
+        id: item.getAttribute('data-id'),
+        position: index + 1
+      }));
+
+      await fetch(`/todos/update-positions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          oldCategory: data.oldCategory,
-          newCategory: newCategory
-        })
+        body: JSON.stringify({ category, positions })
       });
-
-      if (response.ok) {
-        location.reload(); // Reload the page on success
-      } else {
-        alert('Error moving item to new category'); // Show error message
-      }
     }
   </script>
 </body>

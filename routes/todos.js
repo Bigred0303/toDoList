@@ -6,7 +6,7 @@ const {
   fetchGoogleBooks,
   fetchYelpFoods,
   fetchAmazonProducts,
-} = require("./apiHandlers"); // Import API handlers
+} = require("./apiHandlers"); // Import API handlers for fetching data from external APIs
 
 const pool = new Pool({
   user: "labber",
@@ -23,7 +23,7 @@ let todos = {
 
 // Function to fetch todos from the database
 const fetchTodos = async () => {
-  const client = await pool.connect();
+  const client = await pool.connect(); // Connect to the database
   try {
     const categories = ["movies", "books", "restaurants", "products"]; // Define categories
     const categoryPromises = categories.map(async (category) => {
@@ -38,19 +38,19 @@ const fetchTodos = async () => {
       return { ...acc, ...category }; // Merge category data into todos object
     }, {});
   } catch (err) {
-    console.error(`Error fetching todos: ${err.message}`);
+    console.error(`Error fetching todos: ${err.message}`); // Log any errors
   } finally {
     client.release(); // Release the database client
   }
 };
 
-fetchTodos();
+fetchTodos(); // Fetch todos on startup
 
 // Route to render the main page
 router.get("/", async (req, res) => {
-  await fetchTodos();
+  await fetchTodos(); // Fetch the latest todos
   console.log("GET /todos");
-  res.render("todos", { todos });
+  res.render("todos", { todos }); // Render the todos.ejs template with the todos data
 });
 
 // Route to handle new task creation
@@ -80,7 +80,7 @@ router.post("/", async (req, res) => {
       ),
     ]);
   } catch (err) {
-    console.error(`Error fetching data from APIs: ${err.message}`);
+    console.error(`Error fetching data from APIs: ${err.message}`); // Log any errors
     return res.status(500).send("Error fetching data from APIs"); // Return error response if data fetching fails
   }
 
@@ -106,12 +106,12 @@ router.post("/", async (req, res) => {
       ];
       await client.query(queryString, values);
     } catch (err) {
-      console.error(`Error adding movie to database: ${err.message}`);
+      console.error(`Error adding movie to database: ${err.message}`); // Log any errors
     } finally {
-      client.release();
+      client.release(); // Release the database client
     }
   } else {
-    console.log(`Movies category not found`);
+    console.log(`Movies category not found`); // Log if no movies found
   }
 
   // Insert fetched Google book data into the database
@@ -132,12 +132,12 @@ router.post("/", async (req, res) => {
       ];
       await client.query(queryString, values);
     } catch (err) {
-      console.error(`Error adding book to database: ${err.message}`);
+      console.error(`Error adding book to database: ${err.message}`); // Log any errors
     } finally {
-      client.release();
+      client.release(); // Release the database client
     }
   } else {
-    console.log(`Books category not found`);
+    console.log(`Books category not found`); // Log if no books found
   }
 
   // Insert fetched Yelp food data into the database
@@ -158,12 +158,12 @@ router.post("/", async (req, res) => {
       ];
       await client.query(queryString, values);
     } catch (err) {
-      console.error(`Error adding restaurant to database: ${err.message}`);
+      console.error(`Error adding restaurant to database: ${err.message}`); // Log any errors
     } finally {
-      client.release();
+      client.release(); // Release the database client
     }
   } else {
-    console.log(`Restaurants category not found`);
+    console.log(`Restaurants category not found`); // Log if no restaurants found
   }
 
   // Insert fetched Amazon product data into the database
@@ -183,12 +183,12 @@ router.post("/", async (req, res) => {
       ];
       await client.query(queryString, values);
     } catch (err) {
-      console.error(`Error adding product to database: ${err.message}`);
+      console.error(`Error adding product to database: ${err.message}`); // Log any errors
     } finally {
-      client.release();
+      client.release(); // Release the database client
     }
   } else {
-    console.log(`Products category not found`);
+    console.log(`Products category not found`); // Log if no products found
   }
 
   res.redirect("/todos"); // Redirect to the todos page after processing the request
@@ -196,103 +196,103 @@ router.post("/", async (req, res) => {
 
 // Route to render edit form
 router.get("/:category/:id/edit", async (req, res) => {
-  const category = req.params.category;
-  const id = req.params.id;
+  const category = req.params.category; // Get category from request params
+  const id = req.params.id; // Get task id from request params
 
   try {
     const result = await pool.query(`SELECT * FROM ${category} WHERE id = $1`, [
       id,
-    ]);
-    const task = result.rows[0];
+    ]); // Query task details
+    const task = result.rows[0]; // Get the task from the query result
 
     if (task) {
-      res.render("edit", { task, category, id });
+      res.render("edit", { task, category, id }); // Render the edit form with task details
     } else {
-      res.status(404).send("Task not found");
+      res.status(404).send("Task not found"); // Send 404 if task not found
     }
   } catch (err) {
-    console.error(`Error fetching task for edit: ${err.message}`);
-    res.status(500).send("Internal Server Error");
+    console.error(`Error fetching task for edit: ${err.message}`); // Log any errors
+    res.status(500).send("Internal Server Error"); // Send 500 if server error
   }
 });
 
 // Route to update task
 router.post("/:category/:id/edit", async (req, res) => {
-  const client = await pool.connect();
-  const category = req.params.category;
-  const id = req.params.id;
-  const newTask = req.body.editTask;
+  const client = await pool.connect(); // Connect to the database
+  const category = req.params.category; // Get category from request params
+  const id = req.params.id; // Get task id from request params
+  const newTask = req.body.editTask; // Get updated task name from request body
 
   console.log(`Task Name updated: ${newTask}`);
 
   try {
-    const queryString = `UPDATE ${category} SET name = $1 WHERE id = $2`;
+    const queryString = `UPDATE ${category} SET name = $1 WHERE id = $2`; // Update task name
     const values = [newTask, id];
     await client.query(queryString, values);
   } catch (err) {
-    console.error(`Error updating ${category} in the database: ${err.message}`);
+    console.error(`Error updating ${category} in the database: ${err.message}`); // Log any errors
   } finally {
-    client.release();
+    client.release(); // Release the database client
   }
 
-  res.redirect("/todos");
+  res.redirect("/todos"); // Redirect to the todos page after updating the task
 });
 
 // Route to delete task
 router.post("/:category/:id/delete", async (req, res) => {
-  const client = await pool.connect();
-  const allowedCategories = ["movies", "books", "restaurants", "products"];
-  const category = req.params.category;
-  const id = req.params.id;
+  const client = await pool.connect(); // Connect to the database
+  const allowedCategories = ["movies", "books", "restaurants", "products"]; // Define allowed categories
+  const category = req.params.category; // Get category from request params
+  const id = req.params.id; // Get task id from request params
 
   if (!allowedCategories.includes(category)) {
-    return res.status(400).send(`Invalid category: ${category}`);
+    return res.status(400).send(`Invalid category: ${category}`); // Return 400 if category is invalid
   }
 
-  const queryString = `DELETE FROM ${category} WHERE id = $1`;
+  const queryString = `DELETE FROM ${category} WHERE id = $1`; // Delete task from database
   try {
     await client.query(queryString, [id]);
   } catch (err) {
-    console.error(`Error deleting item from ${category}: ${err.message}`);
+    console.error(`Error deleting item from ${category}: ${err.message}`); // Log any errors
   } finally {
-    client.release();
+    client.release(); // Release the database client
   }
 
-  res.redirect("/todos");
+  res.redirect("/todos"); // Redirect to the todos page after deleting the task
 });
 
 // Route to fetch and display task details
 router.get("/:category/:id", async (req, res) => {
-  const { category, id } = req.params;
-  const client = await pool.connect();
+  const { category, id } = req.params; // Get category and id from request params
+  const client = await pool.connect(); // Connect to the database
 
   try {
-    const query = `SELECT * FROM ${category} WHERE id = $1`;
+    const query = `SELECT * FROM ${category} WHERE id = $1`; // Query task details
     const result = await client.query(query, [id]);
 
     if (result.rows.length === 0) {
-      return res.status(404).send("Task not found");
+      return res.status(404).send("Task not found"); // Send 404 if task not found
     }
 
     const task = result.rows[0];
-    res.render("task-details", { task, category });
+    res.render("task-details", { task, category }); // Render task details view
   } catch (err) {
-    console.error(`Error fetching task: ${err.message}`);
-    res.status(500).send("Server error");
+    console.error(`Error fetching task: ${err.message}`); // Log any errors
+    res.status(500).send("Server error"); // Send 500 if server error
   } finally {
-    client.release();
+    client.release(); // Release the database client
   }
 });
 
 // Route to change task category
 router.post("/:id/change-category", async (req, res) => {
-  const client = await pool.connect();
-  const { id } = req.params;
-  const { newCategory, oldCategory } = req.body;
-  const allowedCategories = ["movies", "books", "restaurants", "products"];
+  const client = await pool.connect(); // Connect to the database
+  const { id } = req.params; // Get task id from request params
+  const { newCategory, oldCategory } = req.body; // Get new and old category from request body
+  const allowedCategories = ["movies", "books", "restaurants", "products"]; // Define allowed categories
 
   if (!allowedCategories.includes(newCategory)) {
-    return res.status(400).send(`Invalid new category: ${newCategory}`);
+    return res.status(400).send(`Invalid new category: ${newCategory}`); // Return 400 if new category is invalid
   }
 
   let currentTask = null;
@@ -301,26 +301,27 @@ router.post("/:id/change-category", async (req, res) => {
     const result = await client.query(
       `SELECT * FROM ${oldCategory} WHERE id = $1`,
       [id]
-    );
+    ); // Query task from old category
     if (result.rows.length > 0) {
-      currentTask = result.rows[0];
+      currentTask = result.rows[0]; // Get the current task
     } else {
-      return res.status(404).send("Task not found");
+      return res.status(404).send("Task not found"); // Return 404 if task not found
     }
   } catch (err) {
-    console.error(`Error fetching task: ${err.message}`);
-    return res.status(500).send("Internal server error");
+    console.error(`Error fetching task: ${err.message}`); // Log any errors
+    return res.status(500).send("Internal server error"); // Send 500 if server error
   }
 
   try {
-    await client.query(`DELETE FROM ${oldCategory} WHERE id = $1`, [id]);
+    await client.query(`DELETE FROM ${oldCategory} WHERE id = $1`, [id]); // Delete task from old category
   } catch (err) {
-    console.error(`Error deleting task from ${oldCategory}: ${err.message}`);
+    console.error(`Error deleting task from ${oldCategory}: ${err.message}`); // Log any errors
   }
 
   let newTaskDetails = {};
 
   try {
+    // Fetch new task details based on the new category
     if (newCategory === "movies") {
       const movies = await fetchOMDbMovies(currentTask.name);
       newTaskDetails = movies.length > 0 ? movies[0] : {};
@@ -335,12 +336,13 @@ router.post("/:id/change-category", async (req, res) => {
       newTaskDetails = products.length > 0 ? products[0] : {};
     }
   } catch (err) {
-    console.error(`Error fetching data from APIs: ${err.message}`);
+    console.error(`Error fetching data from APIs: ${err.message}`); // Log any errors
   }
 
   let queryString;
   let values;
 
+  // Define the query string and values for inserting the new task into the new category table
   if (newCategory === "movies") {
     queryString = `INSERT INTO movies (name, movie_title, release_date, rating, genre, imdb_score, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`;
     values = [
@@ -393,15 +395,37 @@ router.post("/:id/change-category", async (req, res) => {
   }
 
   try {
-    await client.query(queryString, values);
-    console.log(`Task moved to ${newCategory}`);
+    await client.query(queryString, values); // Insert the new task into the new category table
+    console.log(`Task moved to ${newCategory}`); // Log the successful move
   } catch (err) {
-    console.error(`Error inserting task into ${newCategory}: ${err.message}`);
+    console.error(`Error inserting task into ${newCategory}: ${err.message}`); // Log any errors
   } finally {
-    client.release();
+    client.release(); // Release the database client
   }
 
-  res.redirect("/todos");
+  res.redirect("/todos"); // Redirect to the todos page after the operation
 });
 
-module.exports = router;
+// Route to update item positions within a category
+router.post("/update-positions", async (req, res) => {
+  const client = await pool.connect(); // Connect to the database
+  const { category, positions } = req.body; // Get category and positions from request body
+
+  try {
+    await Promise.all(
+      positions.map(async (item) => {
+        const queryString = `UPDATE ${category} SET position = $1 WHERE id = $2`; // Update position of each item
+        const values = [item.position, item.id];
+        await client.query(queryString, values);
+      })
+    );
+    res.status(200).send("Positions updated successfully"); // Send success response
+  } catch (err) {
+    console.error(`Error updating positions: ${err.message}`); // Log any errors
+    res.status(500).send("Internal server error"); // Send error response if server error
+  } finally {
+    client.release(); // Release the database client
+  }
+});
+
+module.exports = router; // Export the router
