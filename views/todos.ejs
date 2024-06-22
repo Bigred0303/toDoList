@@ -45,7 +45,7 @@
                       <form action="/todos/<%= category %>/<%= todo.id %>/edit" method="GET">
                         <button type="submit" class="badge badge-success">E</button>
                       </form>
-                      <button class="badge badge-warning" onclick="showCategoryModal('<%= category %>', <%= todo.id %>)">S</button>
+                      <button class="badge badge-warning" onclick="showCategoryModal('<%= category %>', '<%= todo.id %>')">S</button>
                       <form action="/todos/<%= category %>/<%= todo.id %>/delete" method="POST">
                         <button type="submit" class="badge badge-danger">D</button>
                       </form>
@@ -147,4 +147,3 @@
   </script>
 </body>
 </html>
-
