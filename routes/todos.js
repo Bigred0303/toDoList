@@ -297,7 +297,7 @@ router.post("/:id/change-category", async (req, res) => {
   const { id } = req.params; // Get task id from request params
   const { newCategory, oldCategory } = req.body; // Get new and old category from request body
   const allowedCategories = ["movies", "books", "restaurants", "products"]; // Define allowed categories
-  
+
   if (!allowedCategories.includes(newCategory)) {
     return res.status(400).send(`Invalid new category: ${newCategory}`); // Return 400 if new category is invalid
   }
