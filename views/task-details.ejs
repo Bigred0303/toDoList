@@ -21,7 +21,7 @@
   <main class="main container">
     <h2>Details for <%= task.name %></h2>
     <% if (task.title === 'Unknown Title' || task.movie_title === 'Unknown Title' || task.restaurant_name === 'Unknown Restaurant' || task.product_name === 'Unknown Product') { %>
-      <p>This is just a task</p>
+      <p>This is just a task - No Metadata available, sorry!</p>
     <% } else { %>
       <table class="table table-bordered">
         <tbody>

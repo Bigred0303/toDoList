@@ -9,6 +9,7 @@ CREATE TABLE products (
   highest_price FLOAT,
   avg_star_rating FLOAT,
   is_prime BOOLEAN,
+  product_url VARCHAR(255),
   user_id INT REFERENCES users(id) ON DELETE CASCADE
   );
 

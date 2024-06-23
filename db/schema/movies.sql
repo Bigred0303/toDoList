@@ -8,6 +8,7 @@ CREATE TABLE movies (
   rating VARCHAR(255) DEFAULT '0',
   genre VARCHAR(255),
   imdb_score REAL DEFAULT '0',
+  poster_url VARCHAR(255),
   user_id INT REFERENCES users(id) ON DELETE CASCADE
 );
 

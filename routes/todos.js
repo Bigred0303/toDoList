@@ -7,6 +7,7 @@ const {
   fetchYelpFoods,
   fetchAmazonProducts,
 } = require("./apiHandlers"); // Import API handlers for fetching data from external APIs
+var he = require('he');
 
 const pool = new Pool({
   user: "labber",
@@ -95,14 +96,16 @@ router.post("/", async (req, res) => {
     const client = await pool.connect();
     const category = "movies";
     try {
-      const queryString = `INSERT INTO ${category} (name, movie_title, release_date, rating, genre, imdb_score) VALUES ($1, $2, $3, $4, $5, $6)`;
+      omdbMovies[0].movie_title = he.decode(omdbMovies[0].movie_title);
+      const queryString = `INSERT INTO ${category} (name, movie_title, release_date, rating, genre, imdb_score, poster_url) VALUES ($1, $2, $3, $4, $5, $6, $7)`;
       const values = [
         taskName,
-        omdbMovies[0].name,
+        omdbMovies[0].movie_title,
         omdbMovies[0].release_date,
         omdbMovies[0].rating,
         omdbMovies[0].genre,
         omdbMovies[0].imdb_score,
+        omdbMovies[0].poster_url
       ];
       await client.query(queryString, values);
     } catch (err) {
@@ -119,6 +122,7 @@ router.post("/", async (req, res) => {
     const client = await pool.connect();
     const category = "books";
     try {
+      googleBooks[0].title = he.decode(googleBooks[0].title);
       const queryString = `INSERT INTO ${category} (name, title, author, publish_date, page_count, purchase_link, price, language) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
       const values = [
         taskName,
@@ -145,10 +149,11 @@ router.post("/", async (req, res) => {
     const client = await pool.connect();
     const category = "restaurants";
     try {
+      yelpFoods[0].restaurant_name = he.decode(yelpFoods[0].restaurant_name);
       const queryString = `INSERT INTO ${category} (name, restaurant_name, review_count, rating, phone_number, website_url, address, category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
       const values = [
         taskName,
-        yelpFoods[0].name,
+        yelpFoods[0].restaurant_name,
         yelpFoods[0].review_count,
         yelpFoods[0].rating,
         yelpFoods[0].phone_number,
@@ -171,15 +176,17 @@ router.post("/", async (req, res) => {
     const client = await pool.connect();
     const category = "products";
     try {
-      const queryString = `INSERT INTO ${category} (name, product_name, number_of_products, lowest_price, highest_price, avg_star_rating, is_prime) VALUES ($1, $2, $3, $4, $5, $6, $7)`;
+      amazonProducts[0].product_name = he.decode(amazonProducts[0].product_name);
+      const queryString = `INSERT INTO ${category} (name, product_name, number_of_products, lowest_price, highest_price, avg_star_rating, is_prime, product_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
       const values = [
         taskName,
-        amazonProducts[0].name,
+        amazonProducts[0].product_name,
         amazonProducts[0].number_of_products,
         Math.round(amazonProducts[0].lowest_price),
         Math.round(amazonProducts[0].highest_price),
         amazonProducts[0].avg_star_rating,
         amazonProducts[0].is_prime,
+        amazonProducts[0].product_url
       ];
       await client.query(queryString, values);
     } catch (err) {
@@ -290,7 +297,7 @@ router.post("/:id/change-category", async (req, res) => {
   const { id } = req.params; // Get task id from request params
   const { newCategory, oldCategory } = req.body; // Get new and old category from request body
   const allowedCategories = ["movies", "books", "restaurants", "products"]; // Define allowed categories
-
+  
   if (!allowedCategories.includes(newCategory)) {
     return res.status(400).send(`Invalid new category: ${newCategory}`); // Return 400 if new category is invalid
   }
@@ -323,6 +330,7 @@ router.post("/:id/change-category", async (req, res) => {
   try {
     // Fetch new task details based on the new category
     if (newCategory === "movies") {
+      console.log("CALLING MOVIE API - TEST TO FIND MISSING METADATA");
       const movies = await fetchOMDbMovies(currentTask.name);
       newTaskDetails = movies.length > 0 ? movies[0] : {};
     } else if (newCategory === "books") {
@@ -344,7 +352,7 @@ router.post("/:id/change-category", async (req, res) => {
 
   // Define the query string and values for inserting the new task into the new category table
   if (newCategory === "movies") {
-    queryString = `INSERT INTO movies (name, movie_title, release_date, rating, genre, imdb_score, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`;
+    queryString = `INSERT INTO movies (name, movie_title, release_date, rating, genre, imdb_score, poster_url, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
     values = [
       currentTask.name,
       newTaskDetails.movie_title || "Unknown Title",
@@ -352,6 +360,7 @@ router.post("/:id/change-category", async (req, res) => {
       newTaskDetails.rating || "N/A",
       newTaskDetails.genre || "Unknown",
       parseFloat(newTaskDetails.imdb_score) || 0,
+      newTaskDetails.poster_url || "Unknown",
       currentTask.user_id,
     ];
   } else if (newCategory === "books") {
@@ -381,7 +390,7 @@ router.post("/:id/change-category", async (req, res) => {
       currentTask.user_id,
     ];
   } else if (newCategory === "products") {
-    queryString = `INSERT INTO products (name, product_name, number_of_products, lowest_price, highest_price, avg_star_rating, is_prime, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
+    queryString = `INSERT INTO products (name, product_name, number_of_products, lowest_price, highest_price, avg_star_rating, is_prime, product_url , user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`;
     values = [
       currentTask.name,
       newTaskDetails.product_name || "Unknown Product",
@@ -390,10 +399,13 @@ router.post("/:id/change-category", async (req, res) => {
       Math.round(newTaskDetails.highest_price) || 0,
       newTaskDetails.avg_star_rating || 0,
       newTaskDetails.is_prime || false,
+      newTaskDetails.product_url || "Unknown",
       currentTask.user_id,
     ];
   }
 
+
+  console.log("Query values before inserting:", values);
   try {
     await client.query(queryString, values); // Insert the new task into the new category table
     console.log(`Task moved to ${newCategory}`); // Log the successful move

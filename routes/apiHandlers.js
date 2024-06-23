@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 
+
 const API_KEYS = {
   omdb: 'c7c7e658',
   google: 'AIzaSyC0mekQ2d7JOkB7o1Y_Ht69zFr__pEnd1U',
@@ -19,11 +20,12 @@ async function fetchOMDbMovies(taskName) {
     // Process and return relevant data if response is successful
     if (data.Response === 'True') {
       return [{
-        name: data.Title,
+        movie_title: data.Title,
         release_date: data.Released,
         rating: data.Rated,
         genre: data.Genre,
-        imdb_score: parseFloat(data.imdbRating) || 0
+        imdb_score: parseFloat(data.imdbRating) || 0,
+        poster_url: data.Poster
       }];
     } else {
       return [];
@@ -79,7 +81,7 @@ async function fetchYelpFoods(taskName) {
     // Process and return relevant data if response is successful
     if (data.businesses) {
       return data.businesses.map(business => ({
-        name: business.name,
+        restaurant_name: business.name,
         review_count: business.review_count || 0,
         rating: business.rating || 0,
         phone_number: business.phone || '',
@@ -124,7 +126,8 @@ async function fetchAmazonProducts(taskName) {
         lowest_price: product.product_minimum_offer_price ? parseFloat(product.product_minimum_offer_price.replace('$', '')) : 0,
         highest_price: product.product_price ? parseFloat(product.product_price.replace('$', '')) : 0,
         avg_star_rating: product.product_star_rating ? parseFloat(product.product_star_rating) : 0,
-        is_prime: product.is_prime || false
+        is_prime: product.is_prime || false,
+        product_url: product.product_url
       }));
     } else {
       console.warn('No products found in the response data.');
