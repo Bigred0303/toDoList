@@ -352,6 +352,7 @@ router.post("/:id/change-category", async (req, res) => {
 
   // Define the query string and values for inserting the new task into the new category table
   if (newCategory === "movies") {
+    newTaskDetails.movie_title = he.decode(newTaskDetails.movie_title);
     queryString = `INSERT INTO movies (name, movie_title, release_date, rating, genre, imdb_score, poster_url, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
     values = [
       currentTask.name,
@@ -364,6 +365,7 @@ router.post("/:id/change-category", async (req, res) => {
       currentTask.user_id,
     ];
   } else if (newCategory === "books") {
+    newTaskDetails.title = he.decode(newTaskDetails.title);
     queryString = `INSERT INTO books (name, title, author, publish_date, page_count, purchase_link, price, language, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`;
     values = [
       currentTask.name,
@@ -377,6 +379,7 @@ router.post("/:id/change-category", async (req, res) => {
       currentTask.user_id,
     ];
   } else if (newCategory === "restaurants") {
+    newTaskDetails.restaurant_name = he.decode(newTaskDetails.restaurant_name);
     queryString = `INSERT INTO restaurants (name, restaurant_name, review_count, rating, phone_number, website_url, address, category, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`;
     values = [
       currentTask.name,
@@ -390,6 +393,7 @@ router.post("/:id/change-category", async (req, res) => {
       currentTask.user_id,
     ];
   } else if (newCategory === "products") {
+    newTaskDetails.product_name = he.decode(newTaskDetails.product_name);
     queryString = `INSERT INTO products (name, product_name, number_of_products, lowest_price, highest_price, avg_star_rating, is_prime, product_url , user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`;
     values = [
       currentTask.name,
